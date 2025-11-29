@@ -1,9 +1,22 @@
-from fastapi import FastAPI
-from sqlalchemy.ext.asyncio import create_async_engine, async_session
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, select
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
 
 Base = declarative_base()
+
+DATABASE_URL = "postgresql+asyncpg://library_user:library_pass@db:5432/library"
+engine = create_async_engine(DATABASE_URL)
+AsyncSessionLocal = async_sessionmaker(
+    bind = engine,
+    expire_on_commit=True,
+    class_ = AsyncSession
+)
+
+async def get_session() -> AsyncSession:
+    async with AsyncSessionLocal() as session:
+        yield session
 
 class Branch(Base):
     __tablename__ = "branches"
@@ -13,7 +26,6 @@ class Branch(Base):
     address = Column(String, nullable=False)
 
     copies = relationship("BookCopy", back_populates="branch")
-
 
 class Faculty(Base):
     __tablename__ = "faculties"
@@ -74,3 +86,21 @@ async def root():
 async def on_startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+@app.get('/books')
+async def list_books(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Book))
+    books = result.scalars().all()
+    return books
+
+@app.post('/books')
+async def create_book(session: AsyncSession = Depends(get_session)):
+    book = Book(title='Test', author='User', isbn='123', year=2025)
+    session.add(book)
+    await session.commit()
+    await session.refresh()
+    return {'message': 'success'}
+
+
+
+
