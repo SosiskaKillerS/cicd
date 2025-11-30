@@ -98,7 +98,7 @@ async def create_book(session: AsyncSession = Depends(get_session)):
     book = Book(title='Test', author='User', isbn='123', year=2025)
     session.add(book)
     await session.commit()
-    await session.refresh()
+    await session.refresh(book)
     return {'message': 'success'}
 
 
