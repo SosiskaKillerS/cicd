@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 
 Base = declarative_base()
@@ -97,9 +98,17 @@ async def list_books(session: AsyncSession = Depends(get_session)):
 async def create_book(session: AsyncSession = Depends(get_session)):
     book = Book(title='Test', author='User', isbn='123', year=2025)
     session.add(book)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Книга с таким ISBN уже существует",
+        )
+
     await session.refresh(book)
-    return {'message': 'success'}
+    return {"message": "success", "id": book.id}
 
 
 
