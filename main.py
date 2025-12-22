@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.exc import IntegrityError
 
 
+# new change for testing purposes
 Base = declarative_base()
 
 DATABASE_URL = "postgresql+asyncpg://library_user:library_pass@db:5432/library"
