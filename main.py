@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, sele
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 
+# new change for testing purposes
 Base = declarative_base()
 
 DATABASE_URL = "postgresql+asyncpg://library_user:library_pass@db:5432/library"
