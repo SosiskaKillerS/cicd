@@ -15,6 +15,16 @@ from main import (
     upsert_stock,
 )
 
+"""
+Файл содержит unit-тесты (без HTTP и без реальной БД): функции приложения вызываются напрямую, а вместо настоящей AsyncSession используется FakeSession, который имитирует методы scalar, execute, get, add, commit, rollback, refresh. 
+Это позволяет изолированно проверить бизнес-логику и обработку ошибок.
+Покрытие сценариев:
+create_book: успешное создание (commit, refresh, выдача id) и обработка дубликата (IntegrityError → rollback → HTTPException 409).
+analytics_quantity: при отсутствии записи в stock возвращается quantity=0.
+analytics_faculties: при qty=0 возвращается пустой список; при qty>0 возвращается список факультетов и корректный count.
+delete_book: запрет удаления при наличии экземпляров (qty>0 → 409); успешное удаление при qty=0 (delete + commit).
+upsert_stock: 404 если книга не найдена; создание новой записи BookStock при отсутствии связи (add + commit) и корректные поля book_id/branch_id/quantity.
+"""
 
 # ----------------------------
 # Fake async results/session
